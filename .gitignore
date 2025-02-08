@@ -1,0 +1,25 @@
+#Maven build result directory
+target
+#IntelliJ project files
+.idea/*
+!/.idea/icon.svg
+*.iml
+out
+#Eclipse project files
+.settings
+.classpath
+.project
+.externalToolBuilders/
+#Other
+/clover.license
+/actual.txt
+/expected.txt
+/.vscode
+#jEnv configuration
+.java-version
+dependency-reduced-pom.xml
+.flattened-pom.xml
+/bin/
+.mvn/wrapper/maven-wrapper.jar
+# macOS specific files
+.DS_Store

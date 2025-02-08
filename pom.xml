@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.assertj</groupId>
+    <artifactId>assertj-parent</artifactId>
+    <version>3.27.3</version>
+  </parent>
+
+  <artifactId>assertj-eclipse-collections</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+
+  <name>AssertJ Eclipse Collections</name>
+  <description>Rich and fluent assertions for testing Eclipse Collections</description>
+  <url>https://assertj.github.io/</url> <!-- TODO to be defined -->
+  <inceptionYear>2025</inceptionYear>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:https://github.com/assertj/assertj-eclipse-collections.git</connection>
+    <developerConnection>scm:git:https://github.com/assertj/assertj-eclipse-collections.git</developerConnection>
+    <url>https://github.com/assertj/assertj-eclipse-collections</url>
+  </scm>
+
+  <properties>
+    <assertj.version>3.27.3</assertj.version>
+    <eclipse-collections.version>11.1.0</eclipse-collections.version>
+    <!-- Dependency versions overriding -->
+    <junit-jupiter.version>5.11.4</junit-jupiter.version>
+  </properties>
+
+  <dependencies>
+    <!-- Compile -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+    </dependency>
+    <!-- Provided -->
+    <dependency>
+      <groupId>org.eclipse.collections</groupId>
+      <artifactId>eclipse-collections-api</artifactId>
+      <version>${eclipse-collections.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Test -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <failOnWarnings>true</failOnWarnings>
+            <links>
+              <link>https://javadoc.io/static/org.assertj/assertj-core/${assertj.version}/</link>
+              <link>https://javadoc.io/static/org.eclipse.collections/eclipse-collections-api/${eclipse-collections.version}/</link>
+            </links>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+            <configuration>
+              <flattenMode>ossrh</flattenMode>
+              <pomElements>
+                <build>remove</build>
+              </pomElements>
+            </configuration>
+          </execution>
+          <execution>
+            <id>flatten-clean</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
