@@ -1,7 +1,12 @@
 package org.assertj.eclipse.collections.api;
 
+import static org.assertj.core.error.ShouldBeEmpty.shouldBeEmpty;
+import static org.assertj.core.error.ShouldBeNullOrEmpty.shouldBeNullOrEmpty;
+import static org.assertj.core.error.ShouldContainOnlyNulls.shouldContainOnlyNulls;
 import static org.assertj.core.error.ShouldHaveSize.shouldHaveSize;
 import static org.assertj.core.error.ShouldNotBeEmpty.shouldNotBeEmpty;
+
+import java.util.Objects;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.InstanceOfAssertFactory;
@@ -22,6 +27,22 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
    * {@inheritDoc}
    */
   @Override
+  public SELF containsOnlyNulls() {
+    isNotNull();
+    if (actual.isEmpty()) {
+      throw assertionError(shouldContainOnlyNulls(actual));
+    }
+    RichIterable<? extends ELEMENT> nonNullElements = actual.select(Objects::nonNull);
+    if (nonNullElements.isEmpty()) {
+      return myself;
+    }
+    throw assertionError(shouldContainOnlyNulls(actual, nonNullElements));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public SELF hasSize(int expected) {
     isNotNull();
     int actualSize = actual.size();
@@ -35,12 +56,32 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
    * {@inheritDoc}
    */
   @Override
+  public void isEmpty() {
+    isNotNull();
+    if (actual.isEmpty()) {
+      return;
+    }
+    throw assertionError(shouldBeEmpty(actual));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public SELF isNotEmpty() {
     isNotNull();
     if (actual.notEmpty()) {
       return myself;
     }
     throw assertionError(shouldNotBeEmpty());
+  }
+
+  @Override
+  public void isNullOrEmpty() {
+    if (actual == null || actual.isEmpty()) {
+      return;
+    }
+    throw assertionError(shouldBeNullOrEmpty(actual));
   }
 
   /**
