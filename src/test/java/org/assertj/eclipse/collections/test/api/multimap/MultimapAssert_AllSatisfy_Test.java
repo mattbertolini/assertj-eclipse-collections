@@ -1,0 +1,63 @@
+/*
+ * Copyright 2025-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.assertj.eclipse.collections.test.api.multimap;
+
+import org.assertj.eclipse.collections.api.SoftAssertions;
+import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
+import org.eclipse.collections.api.multimap.Multimap;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+
+class MultimapAssert_AllSatisfy_Test {
+  @ParameterizedTest
+  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  void passes(Multimap<String, String> actual) {
+    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).allSatisfy((key, value) -> {
+      assertThat(key).hasSize(3);
+      assertThat(value).isNotBlank();
+    }));
+  }
+
+  @ParameterizedTest
+  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  void failsNoSatisfies(Multimap<String, String> actual) {
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> new MultimapAssert<>(actual).allSatisfy((key, value) -> {
+        assertThat(key).hasSize(2);
+        assertThat(value).isBlank();
+      })).withMessageContaining("Expecting all elements of")
+      .withMessageContaining("to satisfy given requirements, but these elements did not");
+  }
+
+  @ParameterizedTest
+  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  void failsNullRequirements(Multimap<String, String> actual) {
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> new MultimapAssert<>(actual).allSatisfy(null))
+      .withMessageContaining("The BiConsumer<KEY, VALUE> expressing the assertions requirements must not be null");
+  }
+
+  @ParameterizedTest
+  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  void softAssertionsWithEntryPasses(Multimap<String, String> actual) {
+    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).allSatisfy((key, value) -> {
+      assertThat(key).hasSize(3);
+      assertThat(value).isNotBlank();
+    }));
+  }
+}

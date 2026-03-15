@@ -15,9 +15,6 @@
  */
 package org.assertj.eclipse.collections.test.api.multimap;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-
 import org.assertj.eclipse.collections.api.SoftAssertions;
 import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
 import org.eclipse.collections.api.multimap.Multimap;
@@ -25,37 +22,36 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class MultimapAssert_HasDistinctSizeGreaterThan_Test {
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
+class MultimapAssert_HasDistinctSizeGreaterThanOrEqualTo_Test {
   @ParameterizedTest
   @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#distinctSizeLowerBoundaryTestData")
   void passesGreaterThan(Multimap<String, String> actual, int lowerBoundary) {
-    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThan(lowerBoundary));
+    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThanOrEqualTo(lowerBoundary));
   }
 
   @ParameterizedTest
   @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#distinctSizeUpperBoundaryTestData")
   void failsLesser(Multimap<String, String> actual, int upperBoundary) {
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThan(upperBoundary))
+      .isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThanOrEqualTo(upperBoundary))
       .withMessageContaining("Expecting distinct size of")
-      .withMessageContaining(String.format("to be greater than %s but was %s", upperBoundary, actual.sizeDistinct()));
+      .withMessageContaining(String.format("to be greater than or equal to %s but was %s", upperBoundary, actual.sizeDistinct()));
   }
 
   @ParameterizedTest
   @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#distinctSizeEqualsTestData")
-  void failsEquals(Multimap<String, String> actual, int equalsBoundary) {
-    assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThan(equalsBoundary))
-      .withMessageContaining("Expecting distinct size of")
-      .withMessageContaining(String.format("to be greater than %s but was %s", equalsBoundary, actual.sizeDistinct()));
+  void passesEquals(Multimap<String, String> actual, int equalsBoundary) {
+    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThanOrEqualTo(equalsBoundary));
   }
 
   @Test
   void failsNullMultimap() {
     int lowerBoundary = 2; // Using the same value as in distinctSizeLowerBoundaryTestData
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(null).hasDistinctSizeGreaterThan(lowerBoundary))
+      .isThrownBy(() -> new MultimapAssert<>(null).hasDistinctSizeGreaterThanOrEqualTo(lowerBoundary))
       .withMessageContaining("Expecting actual not to be null");
   }
 
@@ -64,13 +60,13 @@ class MultimapAssert_HasDistinctSizeGreaterThan_Test {
   void failsEmptyMultimap(Multimap<String, String> actual) {
     int lowerBoundary = 2; // Using the same value as in distinctSizeLowerBoundaryTestData
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThan(lowerBoundary))
-      .withMessageContaining(String.format("to be greater than %s but was 0", lowerBoundary));
+      .isThrownBy(() -> new MultimapAssert<>(actual).hasDistinctSizeGreaterThanOrEqualTo(lowerBoundary))
+      .withMessageContaining(String.format("to be greater than or equal to %s but was 0", lowerBoundary));
   }
 
   @ParameterizedTest
   @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#distinctSizeLowerBoundaryTestData")
   void softAssertionPasses(Multimap<String, String> actual, int lowerBoundary) {
-    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).hasDistinctSizeGreaterThan(lowerBoundary));
+    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).hasDistinctSizeGreaterThanOrEqualTo(lowerBoundary));
   }
 }

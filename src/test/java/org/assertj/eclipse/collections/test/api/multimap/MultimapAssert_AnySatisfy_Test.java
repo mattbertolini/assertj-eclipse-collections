@@ -15,42 +15,32 @@
  */
 package org.assertj.eclipse.collections.test.api.multimap;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import org.assertj.eclipse.collections.api.SoftAssertions;
 import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
 import org.eclipse.collections.api.multimap.Multimap;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class MultimapAssert_IsNotEmpty_Test {
-
+class MultimapAssert_AnySatisfy_Test {
   @ParameterizedTest
   @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
-  void passesNotEmpty(Multimap<String, String> actual) {
-    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).isNotEmpty());
-  }
-
-  @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#emptyMultimaps")
-  void failsEmpty(Multimap<String, String> actual) {
-    assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(actual).isNotEmpty())
-      .withMessageContaining("Expecting actual not to be empty");
-  }
-
-  @Test
-  void failsNullMultimap() {
-    assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(null).isNotEmpty())
-      .withMessageContaining("Expecting actual not to be null");
+  void passes(Multimap<String, String> actual) {
+    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).anySatisfy((key, value) -> {
+      assertThat(key).isEqualTo("TNG");
+      assertThat(value).isEqualTo("Picard");
+    }));
   }
 
   @ParameterizedTest
   @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
-  void softAssertionPasses(Multimap<String, String> actual) {
-    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).isNotEmpty());
+  void failsNoSatisfies(Multimap<String, String> actual) {
+    assertThatExceptionOfType(AssertionError.class).isThrownBy(() -> new MultimapAssert<>(actual).anySatisfy((key, value) -> {
+      assertThat(key).isEqualTo("XYZ");
+      assertThat(value).isEqualTo("Not Found");
+    })).withMessageContaining("Expecting any element of")
+      .withMessageContaining("to satisfy the given assertions requirements but none did");
   }
 }

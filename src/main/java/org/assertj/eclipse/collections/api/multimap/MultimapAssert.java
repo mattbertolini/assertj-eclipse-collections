@@ -1,18 +1,23 @@
 /*
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Copyright 2025-2026 the original author or authors.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
- * Copyright 2025-2025 the original author or authors.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.assertj.eclipse.collections.api.multimap;
 
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.error.ElementsShouldSatisfy.elementsShouldSatisfy;
+import static org.assertj.core.error.ElementsShouldSatisfy.elementsShouldSatisfyAny;
 import static org.assertj.core.error.ShouldBeEmpty.shouldBeEmpty;
 import static org.assertj.core.error.ShouldBeNullOrEmpty.shouldBeNullOrEmpty;
 import static org.assertj.core.error.ShouldContain.shouldContain;
@@ -33,11 +38,15 @@ import static org.assertj.eclipse.collections.error.ShouldHaveDistinctSizeGreate
 import static org.assertj.eclipse.collections.error.ShouldHaveDistinctSizeGreaterThanOrEqualTo.shouldHaveDistinctSizeGreaterThanOrEqualTo;
 
 import java.util.Map;
+import java.util.function.BiConsumer;
 
+import org.assertj.core.annotation.CanIgnoreReturnValue;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Condition;
 import org.assertj.core.error.GroupTypeDescription;
+import org.assertj.core.error.UnsatisfiedRequirement;
 import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.multimap.Multimap;
@@ -51,6 +60,7 @@ import org.eclipse.collections.impl.tuple.Tuples;
  * @param <KEY>   the type of keys in the Multimap.
  * @param <VALUE> the type of values in the Multimap.
  */
+@CanIgnoreReturnValue
 public class MultimapAssert<KEY, VALUE> extends AbstractAssert<MultimapAssert<KEY, VALUE>, Multimap<KEY, VALUE>> {
 
   /**
@@ -60,6 +70,66 @@ public class MultimapAssert<KEY, VALUE> extends AbstractAssert<MultimapAssert<KE
    */
   public MultimapAssert(Multimap<KEY, VALUE> actual) {
     super(actual, MultimapAssert.class);
+  }
+
+  /**
+   * Verifies that all the actual multimap entries satisfy the given {@code entryRequirements} .
+   * <p>
+   * Example:
+   * <p>
+   * If the actual multimap is empty, this assertion succeeds as there is nothing to check.
+   *
+   * @param entryRequirements the given requirements that each entry must satisfy.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given entryRequirements {@link BiConsumer} is {@code null}.
+   * @throws AssertionError       if the actual multimap is {@code null}.
+   * @throws AssertionError       if one or more entries don't satisfy the given requirements.
+   */
+  public MultimapAssert<KEY, VALUE> allSatisfy(BiConsumer<? super KEY, ? super VALUE> entryRequirements) {
+    isNotNull();
+    requireNonNull(entryRequirements, "The BiConsumer<KEY, VALUE> expressing the assertions requirements must not be null");
+
+    MutableList<UnsatisfiedRequirement> unsatisfiedRequirements = Lists.mutable.empty();
+    if (actual.keyValuePairsView().allSatisfy(satisfiesRequirements(entryRequirements, unsatisfiedRequirements))) {
+      return myself;
+    }
+
+    throw assertionError(elementsShouldSatisfy(actual, unsatisfiedRequirements, info));
+  }
+
+  /**
+   * Verifies that at least one multimap entry satisfies the given {@code entryRequirements} .
+   * <p>
+   * Example:
+   *
+   * @param entryRequirements the given requirements that at least one entry must satisfy.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given entryRequirements {@link BiConsumer} is {@code null}.
+   * @throws AssertionError       if the actual multimap is {@code null}.
+   * @throws AssertionError       if no entries satisfy the given requirements.
+   */
+  public MultimapAssert<KEY, VALUE> anySatisfy(BiConsumer<? super KEY, ? super VALUE> entryRequirements) {
+    isNotNull();
+    requireNonNull(entryRequirements, "The BiConsumer<KEY, VALUE> expressing the assertions requirements must not be null");
+
+    MutableList<UnsatisfiedRequirement> unsatisfiedRequirements = Lists.mutable.empty();
+    if (actual.keyValuePairsView().anySatisfy(satisfiesRequirements(entryRequirements, unsatisfiedRequirements))) {
+      return myself;
+    }
+
+    throw assertionError(elementsShouldSatisfyAny(actual, unsatisfiedRequirements, info));
+  }
+
+  private static <KEY, VALUE> Predicate<Pair<KEY, VALUE>> satisfiesRequirements(BiConsumer<? super KEY, ? super VALUE> entryRequirements, MutableList<UnsatisfiedRequirement> unsatisfiedRequirements) {
+    return entry -> {
+      try {
+        entryRequirements.accept(entry.getOne(), entry.getTwo());
+        return true;
+      } catch (AssertionError e) {
+        unsatisfiedRequirements.add(new UnsatisfiedRequirement(entry, e));
+        return false;
+      }
+    };
   }
 
   /**
@@ -95,8 +165,8 @@ public class MultimapAssert<KEY, VALUE> extends AbstractAssert<MultimapAssert<KE
    * @throws AssertionError if the actual {@code Multimap} does not contain one or more of the specified entries.
    */
   @SafeVarargs
-  public final MultimapAssert<KEY, VALUE> contains(Map.Entry<KEY, VALUE>... entries) {
-    MutableList<Pair<KEY, VALUE>> pairs = Lists.mutable.of(entries).collect(Tuples::pairFrom);
+  public final MultimapAssert<KEY, VALUE> contains(Map.Entry<? extends KEY, ? extends VALUE>... entries) {
+    MutableList<Pair<? extends KEY, ? extends VALUE>> pairs = Lists.mutable.of(entries).collect(Tuples::pairFrom);
     return this.containsForProxy(pairs);
   }
 
@@ -107,9 +177,9 @@ public class MultimapAssert<KEY, VALUE> extends AbstractAssert<MultimapAssert<KE
    * @return this assertion object for method chaining.
    * @throws AssertionError if the actual {@code Multimap} does not contain one or more of the specified entries.
    */
-  protected MultimapAssert<KEY, VALUE> containsForProxy(MutableList<Pair<KEY, VALUE>> entries) {
+  protected MultimapAssert<KEY, VALUE> containsForProxy(MutableList<Pair<? extends KEY, ? extends VALUE>> entries) {
     this.isNotNull();
-    MutableList<Pair<KEY, VALUE>> entriesNotFound = entries
+    MutableList<Pair<? extends KEY, ? extends VALUE>> entriesNotFound = entries
       .reject(entry -> this.actual.containsKeyAndValue(entry.getOne(), entry.getTwo()));
     if (entriesNotFound.isEmpty()) {
       return this.myself;
