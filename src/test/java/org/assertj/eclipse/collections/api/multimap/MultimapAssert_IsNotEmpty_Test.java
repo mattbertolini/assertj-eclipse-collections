@@ -13,48 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.assertj.eclipse.collections.test.api.multimap;
+package org.assertj.eclipse.collections.api.multimap;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import org.assertj.core.api.Condition;
 import org.assertj.eclipse.collections.api.SoftAssertions;
-import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
+import org.assertj.eclipse.collections.api.MultimapAssert;
 import org.eclipse.collections.api.multimap.Multimap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class MultimapAssert_HasKeySatisfying_Test {
-
-  private static final Condition<Object> PASSING_CONDITION = new Condition<>("DS9"::equals, "key equals DS9");
-  private static final Condition<Object> FAILING_CONDITION = new Condition<>("DIS"::equals, "key equals DIS");
+class MultimapAssert_IsNotEmpty_Test {
 
   @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
-  void passesKeySatisfying(Multimap<String, String> actual) {
-    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).hasKeySatisfying(PASSING_CONDITION));
+  @MethodSource("org.assertj.eclipse.collections.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  void passesNotEmpty(Multimap<String, String> actual) {
+    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).isNotEmpty());
   }
 
   @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
-  void failsKeyNotSatisfying(Multimap<String, String> actual) {
+  @MethodSource("org.assertj.eclipse.collections.api.multimap.MultimapTestData#emptyMultimaps")
+  void failsEmpty(Multimap<String, String> actual) {
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(actual).hasKeySatisfying(FAILING_CONDITION))
-      .withMessageContaining(FAILING_CONDITION.description().toString());
+      .isThrownBy(() -> new MultimapAssert<>(actual).isNotEmpty())
+      .withMessageContaining("Expecting actual not to be empty");
   }
 
   @Test
   void failsNullMultimap() {
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(null).hasKeySatisfying(PASSING_CONDITION))
+      .isThrownBy(() -> new MultimapAssert<>(null).isNotEmpty())
       .withMessageContaining("Expecting actual not to be null");
   }
 
   @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  @MethodSource("org.assertj.eclipse.collections.api.multimap.MultimapTestData#nonEmptyMultimaps")
   void softAssertionPasses(Multimap<String, String> actual) {
-    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).hasKeySatisfying(PASSING_CONDITION));
+    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).isNotEmpty());
   }
 }

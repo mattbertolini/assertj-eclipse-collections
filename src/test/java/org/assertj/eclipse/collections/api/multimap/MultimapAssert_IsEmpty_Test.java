@@ -13,44 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.assertj.eclipse.collections.test.api.multimap;
+package org.assertj.eclipse.collections.api.multimap;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import org.assertj.eclipse.collections.api.SoftAssertions;
-import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
+import org.assertj.eclipse.collections.api.MultimapAssert;
 import org.eclipse.collections.api.multimap.Multimap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class MultimapAssert_HasSize_Test {
+class MultimapAssert_IsEmpty_Test {
 
   @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#sizeEqualsTestData")
-  void passes(Multimap<String, String> actual, int expectedSize) {
-    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).hasSize(expectedSize));
+  @MethodSource("org.assertj.eclipse.collections.api.multimap.MultimapTestData#emptyMultimaps")
+  void passes(Multimap<String, String> actual) {
+    assertThatNoException().isThrownBy(() -> new MultimapAssert<>(actual).isEmpty());
   }
 
   @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#emptyMultimapsWithExpectedSize")
-  void failsEmpty(Multimap<String, String> actual, int expectedSize) {
+  @MethodSource("org.assertj.eclipse.collections.api.multimap.MultimapTestData#nonEmptyMultimaps")
+  void failsNotEmpty(Multimap<String, String> actual) {
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(actual).hasSize(expectedSize))
-      .withMessageContaining(String.format("Expected size: %s but was: 0", expectedSize));
+      .isThrownBy(() -> new MultimapAssert<>(actual).isEmpty())
+      .withMessageContaining("Expecting empty but was: " + actual.toString());
   }
 
   @Test
   void failsNullMultimap() {
     assertThatExceptionOfType(AssertionError.class)
-      .isThrownBy(() -> new MultimapAssert<>(null).hasSize(38))
+      .isThrownBy(() -> new MultimapAssert<>(null).isEmpty())
       .withMessageContaining("Expecting actual not to be null");
   }
 
   @ParameterizedTest
-  @MethodSource("org.assertj.eclipse.collections.test.api.multimap.MultimapTestData#sizeEqualsTestData")
-  void softAssertionPasses(Multimap<String, String> actual, int expectedSize) {
-    SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).hasSize(expectedSize));
+  @MethodSource("org.assertj.eclipse.collections.api.multimap.MultimapTestData#emptyMultimaps")
+  void softAssertionPasses(Multimap<String, String> actual) {
+    assertThatNoException().isThrownBy(() ->
+      SoftAssertions.assertSoftly(softly -> softly.assertThat(actual).isEmpty()));
   }
 }

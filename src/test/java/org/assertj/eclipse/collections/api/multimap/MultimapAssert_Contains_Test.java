@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.assertj.eclipse.collections.test.api.multimap;
+package org.assertj.eclipse.collections.api.multimap;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.assertj.eclipse.collections.api.SoftAssertions;
-import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
+import org.assertj.eclipse.collections.api.MultimapAssert;
 import org.eclipse.collections.api.multimap.Multimap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;

@@ -17,7 +17,6 @@ package org.assertj.eclipse.collections.api;
 
 import org.assertj.core.api.SoftAssertionsProvider;
 import org.assertj.core.util.CheckReturnValue;
-import org.assertj.eclipse.collections.api.multimap.MultimapAssert;
 import org.eclipse.collections.api.multimap.Multimap;
 
 /**

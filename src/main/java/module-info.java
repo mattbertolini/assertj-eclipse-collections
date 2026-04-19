@@ -18,7 +18,6 @@
  */
 module org.assertj.eclipse.collections {
   exports org.assertj.eclipse.collections.api;
-  exports org.assertj.eclipse.collections.api.multimap;
   exports org.assertj.eclipse.collections.error;
 
   requires org.assertj.core;
