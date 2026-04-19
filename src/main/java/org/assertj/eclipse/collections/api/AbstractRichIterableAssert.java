@@ -16,6 +16,11 @@
 package org.assertj.eclipse.collections.api;
 
 import static org.assertj.core.error.ShouldHaveSize.shouldHaveSize;
+import static org.assertj.core.util.Preconditions.checkArgument;
+
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractIterableAssert;
@@ -41,6 +46,36 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
 
   protected AbstractRichIterableAssert(ACTUAL actual, Class<?> selfType) {
     super(actual, selfType);
+  }
+
+  @Override
+  public <T> SELF filteredOn(Function<? super ELEMENT, T> function, T expectedValue) {
+    checkArgument(function != null, "The filter function should not be null");
+    return internalFilteredOn(element -> Objects.equals(function.apply(element), expectedValue));
+  }
+
+  /**
+   * Filters the iterable under test keeping only elements matching the given {@link Predicate}.
+   * <p>
+   * Example: check old employees whose age &gt; 100:
+   *
+   * <pre><code class='java'> Employee yoda   = new Employee(1L, new Name("Yoda"), 800);
+   * Employee obiwan = new Employee(2L, new Name("Obiwan"), 800);
+   * Employee luke   = new Employee(3L, new Name("Luke", "Skywalker"), 26);
+   *
+   * List&lt;Employee&gt; employees = List.of(yoda, luke, obiwan);
+   *
+   * assertThat(employees).filteredOn(employee -&gt; employee.getAge() &gt; 100)
+   *                      .containsOnly(yoda, obiwan);</code></pre>
+   *
+   * @param predicate the filter predicate
+   * @return a new assertion object with the filtered iterable under test
+   * @throws IllegalArgumentException if the given predicate is {@code null}.
+   */
+  @Override
+  public SELF filteredOn(Predicate<? super ELEMENT> predicate) {
+    checkArgument(predicate != null, "The filter predicate should not be null");
+    return internalFilteredOn(predicate::test);
   }
 
   /**
@@ -71,5 +106,18 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
     }
 
     throw assertionError(shouldHaveSize(actual, actualSize, expected));
+  }
+
+  /**
+   * Helper method that filters via Eclipse Collections to avoid creating any JCL collections.
+   *
+   * @param predicate The predicate to filter on.
+   * @return A new {@link AbstractRichIterableAssert} with the filtered values.
+   */
+  private SELF internalFilteredOn(org.eclipse.collections.api.block.predicate.Predicate<? super ELEMENT> predicate) {
+    checkArgument(predicate != null, "The filter predicate should not be null");
+    // TODO: In AbstractIterableAssert the withAssertionState method is package-private. Need to find out how to handle
+    //  this method or if we need to use it
+    return newAbstractIterableAssert(actual.select(predicate));//.withAssertionState(myself);
   }
 }
