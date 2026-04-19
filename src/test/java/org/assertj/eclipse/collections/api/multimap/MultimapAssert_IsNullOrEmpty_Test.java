@@ -54,6 +54,6 @@ class MultimapAssert_IsNullOrEmpty_Test {
 
   @Test
   void softAssertionPassesNullMultimap() {
-    assertThatNoException().isThrownBy(() -> SoftAssertions.assertSoftly(softly -> softly.assertThat(null).isNullOrEmpty()));
+    assertThatNoException().isThrownBy(() -> SoftAssertions.assertSoftly(softly -> softly.assertThat((Multimap) null).isNullOrEmpty()));
   }
 }

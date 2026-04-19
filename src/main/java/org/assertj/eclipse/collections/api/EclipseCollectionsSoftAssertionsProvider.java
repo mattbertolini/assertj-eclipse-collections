@@ -15,15 +15,30 @@
  */
 package org.assertj.eclipse.collections.api;
 
+import org.assertj.core.annotation.CheckReturnValue;
 import org.assertj.core.api.SoftAssertionsProvider;
-import org.assertj.core.util.CheckReturnValue;
+import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.multimap.Multimap;
+import org.eclipse.collections.api.set.SetIterable;
 
 /**
  * Soft assertions implementations for Eclipse Collections types.
  */
 @CheckReturnValue
 public interface EclipseCollectionsSoftAssertionsProvider extends SoftAssertionsProvider {
+
+  /**
+   * Create a new, proxied instance of a {@link BagAssert}
+   *
+   * @param actual the actual value
+   * @return the created assertion object
+   * @param <T> The type of the elements in the bag
+   */
+  @SuppressWarnings("unchecked")
+  default <T> BagAssert<T> assertThat(Bag<T> actual) {
+    return this.proxy(BagAssert.class, Bag.class, actual);
+  }
+
   /**
    * Creates a new, proxied instance of a {@link MultimapAssert}
    *
@@ -35,5 +50,10 @@ public interface EclipseCollectionsSoftAssertionsProvider extends SoftAssertions
   @SuppressWarnings("unchecked")
   default <KEY, VALUE> MultimapAssert<KEY, VALUE> assertThat(Multimap<KEY, VALUE> actual) {
     return this.proxy(MultimapAssert.class, Multimap.class, actual);
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T> SetIterableAssert<T> assertThat(SetIterable<T> actual) {
+    return this.proxy(SetIterableAssert.class, SetIterable.class, actual);
   }
 }

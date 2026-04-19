@@ -15,8 +15,10 @@
  */
 package org.assertj.eclipse.collections.api;
 
-import org.assertj.core.util.CheckReturnValue;
+import org.assertj.core.annotation.CheckReturnValue;
+import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.multimap.Multimap;
+import org.eclipse.collections.api.set.SetIterable;
 
 /**
  * Entry point for assertion methods for the Eclipse Collections library. Each method in this class is a static factory
@@ -31,6 +33,10 @@ public class Assertions {
     // Do nothing
   }
 
+  public static <T> BagAssert<T> assertThat(Bag<T> actual) {
+    return new BagAssert<>(actual);
+  }
+
   /**
    * Creates a new instance of {@link MultimapAssert}.
    *
@@ -41,5 +47,16 @@ public class Assertions {
    */
   public static <KEY, VALUE> MultimapAssert<KEY, VALUE> assertThat(Multimap<KEY, VALUE> actual) {
     return new MultimapAssert<>(actual);
+  }
+
+  /**
+   * Creates a new instance of {@link SetIterableAssert}.
+   *
+   * @param actual the actual value.
+   * @return the created assertion object.
+   * @param <T> The type of the elements in the set
+   */
+  public static <T>SetIterableAssert<T> assertThat(SetIterable<T> actual) {
+    return new SetIterableAssert<>(actual);
   }
 }

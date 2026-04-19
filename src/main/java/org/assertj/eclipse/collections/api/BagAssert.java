@@ -1,0 +1,38 @@
+/*
+ * Copyright 2025-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.assertj.eclipse.collections.api;
+
+import org.assertj.core.api.ObjectAssert;
+import org.eclipse.collections.api.bag.Bag;
+import org.eclipse.collections.api.bag.ImmutableBag;
+import org.eclipse.collections.api.factory.Bags;
+
+public class BagAssert<ELEMENT> extends AbstractRichIterableAssert<BagAssert<ELEMENT>, Bag<? extends ELEMENT>, ELEMENT, ObjectAssert<ELEMENT>> {
+  public BagAssert(Bag<? extends ELEMENT> elements) {
+    super(elements, BagAssert.class);
+  }
+
+  @Override
+  protected ObjectAssert<ELEMENT> toAssert(ELEMENT value) {
+    return new ObjectAssert<>(value);
+  }
+
+  @Override
+  protected BagAssert<ELEMENT> newAbstractIterableAssert(Iterable<? extends ELEMENT> iterable) {
+    ImmutableBag<? extends ELEMENT> elements = Bags.immutable.ofAll(iterable);
+    return new BagAssert<>(elements);
+  }
+}
