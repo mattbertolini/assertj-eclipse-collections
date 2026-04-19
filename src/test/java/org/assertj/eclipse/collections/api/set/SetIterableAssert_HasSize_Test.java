@@ -24,7 +24,7 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.junit.jupiter.api.Test;
 
-public class SetAssert_HasSize_Test {
+public class SetIterableAssert_HasSize_Test {
   @Test
   void passes() {
     ImmutableSet<String> set = createSet();
