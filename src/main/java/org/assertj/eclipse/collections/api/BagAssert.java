@@ -20,6 +20,11 @@ import org.eclipse.collections.api.bag.Bag;
 import org.eclipse.collections.api.bag.ImmutableBag;
 import org.eclipse.collections.api.factory.Bags;
 
+/**
+ * Assertion methods for the {@link Bag} interface.
+ *
+ * @param <ELEMENT> the type of elements stored in {@link Bag}.
+ */
 public class BagAssert<ELEMENT> extends AbstractRichIterableAssert<BagAssert<ELEMENT>, Bag<? extends ELEMENT>, ELEMENT, ObjectAssert<ELEMENT>> {
   public BagAssert(Bag<? extends ELEMENT> elements) {
     super(elements, BagAssert.class);

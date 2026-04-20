@@ -20,6 +20,11 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 
+/**
+ * Assertion methods for {@link SetIterable} interface.
+ *
+ * @param <ELEMENT> the type of elements stored in {@link SetIterable}.
+ */
 public class SetIterableAssert<ELEMENT> extends AbstractRichIterableAssert<SetIterableAssert<ELEMENT>, SetIterable<? extends ELEMENT>, ELEMENT, ObjectAssert<ELEMENT>> {
   public SetIterableAssert(SetIterable<? extends ELEMENT> elements) {
     super(elements, SetIterableAssert.class);

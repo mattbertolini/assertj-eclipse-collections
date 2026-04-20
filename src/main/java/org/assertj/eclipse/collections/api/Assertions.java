@@ -33,6 +33,13 @@ public class Assertions {
     // Do nothing
   }
 
+  /**
+   * Creates a new instance of {@link BagAssert}.
+   *
+   * @param actual the actual value.
+   * @return the created assertion object.
+   * @param <T> The type of the elements in the bag
+   */
   public static <T> BagAssert<T> assertThat(Bag<T> actual) {
     return new BagAssert<>(actual);
   }

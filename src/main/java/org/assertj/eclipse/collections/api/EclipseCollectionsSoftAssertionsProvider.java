@@ -52,6 +52,13 @@ public interface EclipseCollectionsSoftAssertionsProvider extends SoftAssertions
     return this.proxy(MultimapAssert.class, Multimap.class, actual);
   }
 
+  /**
+   * Creates a new, proxied instance of a {@link SetIterableAssert}
+   *
+   * @param actual the actual value
+   * @return the created assertion object
+   * @param <T> The type of the elements in the set
+   */
   @SuppressWarnings("unchecked")
   default <T> SetIterableAssert<T> assertThat(SetIterable<T> actual) {
     return this.proxy(SetIterableAssert.class, SetIterable.class, actual);
