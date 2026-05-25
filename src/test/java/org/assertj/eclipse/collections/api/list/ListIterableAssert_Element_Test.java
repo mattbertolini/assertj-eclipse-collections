@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Test module for AssertJ Eclipse Collections
- */
-open module org.assertj.eclipse.collections.test {
-  exports org.assertj.eclipse.collections.api.list;
-  exports org.assertj.eclipse.collections.api.multimap;
-  exports org.assertj.eclipse.collections.api.richiterable;
-  exports org.assertj.eclipse.collections.api.stack;
+package org.assertj.eclipse.collections.api.list;
 
-  requires org.assertj.eclipse.collections;
-  requires org.assertj.core;
-  requires org.eclipse.collections.api;
-  requires org.eclipse.collections.impl;
-  requires org.junit.jupiter.api;
-  requires org.junit.jupiter.params;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+
+import org.assertj.eclipse.collections.api.ListIterableAssert;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.junit.jupiter.api.Test;
+
+class ListIterableAssert_Element_Test {
+  @Test
+  void passes() {
+    assertThatNoException().isThrownBy(() -> {
+      ImmutableList<String> list = Lists.immutable.of("TOS", "TNG", "DS9", "VOY", "ENT");
+      new ListIterableAssert<>(list).element(2).isEqualTo("DS9");
+    });
+  }
 }
