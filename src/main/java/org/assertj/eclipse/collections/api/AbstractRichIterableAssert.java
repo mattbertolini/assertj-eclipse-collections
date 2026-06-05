@@ -15,13 +15,26 @@
  */
 package org.assertj.eclipse.collections.api;
 
+import static org.assertj.core.error.ShouldBeAnArray.shouldBeAnArray;
+import static org.assertj.core.error.ShouldBeEmpty.shouldBeEmpty;
+import static org.assertj.core.error.ShouldBeNullOrEmpty.shouldBeNullOrEmpty;
+import static org.assertj.core.error.ShouldHaveSameSizeAs.shouldHaveSameSizeAs;
 import static org.assertj.core.error.ShouldHaveSize.shouldHaveSize;
+import static org.assertj.core.error.ShouldHaveSizeBetween.shouldHaveSizeBetween;
+import static org.assertj.core.error.ShouldHaveSizeGreaterThan.shouldHaveSizeGreaterThan;
+import static org.assertj.core.error.ShouldHaveSizeGreaterThanOrEqualTo.shouldHaveSizeGreaterThanOrEqualTo;
+import static org.assertj.core.error.ShouldHaveSizeLessThan.shouldHaveSizeLessThan;
+import static org.assertj.core.error.ShouldHaveSizeLessThanOrEqualTo.shouldHaveSizeLessThanOrEqualTo;
+import static org.assertj.core.error.ShouldNotBeEmpty.shouldNotBeEmpty;
+import static org.assertj.core.util.IterableUtil.sizeOf;
 import static org.assertj.core.util.Preconditions.checkArgument;
 
+import java.lang.reflect.Array;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.assertj.core.annotation.CheckReturnValue;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.eclipse.collections.api.RichIterable;
@@ -49,6 +62,7 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
   }
 
   @Override
+  @CheckReturnValue
   public <T> SELF filteredOn(Function<? super ELEMENT, T> function, T expectedValue) {
     checkArgument(function != null, "The filter function should not be null");
     return internalFilteredOn(element -> Objects.equals(function.apply(element), expectedValue));
@@ -57,25 +71,77 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
   /**
    * Filters the iterable under test keeping only elements matching the given {@link Predicate}.
    * <p>
-   * Example: check old employees whose age &gt; 100:
+   * Example: check crew members whose pips > 2:
    *
-   * <pre><code class='java'> Employee yoda   = new Employee(1L, new Name("Yoda"), 800);
-   * Employee obiwan = new Employee(2L, new Name("Obiwan"), 800);
-   * Employee luke   = new Employee(3L, new Name("Luke", "Skywalker"), 26);
+   * <pre>{@code CrewMember picard   = new CrewMember(1L, new Name("Picard"), 4);
+   * CrewMember riker = new CrewMember(2L, new Name("Riker"), 3);
+   * CrewMember crusher   = new CrewMember(3L, new Name("Wesley", "Crusher"), 1);
    *
-   * List&lt;Employee&gt; employees = List.of(yoda, luke, obiwan);
+   * ImmutableList<CrewMember> crew = Lists.immutable.of(picard, crusher, riker);
    *
-   * assertThat(employees).filteredOn(employee -&gt; employee.getAge() &gt; 100)
-   *                      .containsOnly(yoda, obiwan);</code></pre>
+   * assertThat(crew).filteredOn(crewMember -> crewMember.getPips() > 2)
+   *                      .containsOnly(picard, riker);}</pre>
    *
    * @param predicate the filter predicate
    * @return a new assertion object with the filtered iterable under test
    * @throws IllegalArgumentException if the given predicate is {@code null}.
    */
   @Override
+  @CheckReturnValue
   public SELF filteredOn(Predicate<? super ELEMENT> predicate) {
     checkArgument(predicate != null, "The filter predicate should not be null");
     return internalFilteredOn(predicate::test);
+  }
+
+  /**
+   * Verifies that the size of the actual RichIterable is equal to the size of the given iterable.
+   *
+   * @param other the iterable to compare the size of the actual RichIterable with.
+   * @return {@code this} assertion object.
+   * @throws NullPointerException if the given iterable is {@code null}.
+   * @throws AssertionError if the size of the actual RichIterable is not equal to the size of the given iterable.
+   */
+  @Override
+  public SELF hasSameSizeAs(Iterable<?> other) {
+    isNotNull();
+
+    final int otherSize;
+    if (other instanceof RichIterable<?> richIterable) {
+      otherSize = richIterable.size();
+    } else {
+      otherSize = sizeOf(other);
+    }
+
+    int actualSize = actual.size();
+    if (actualSize == otherSize) {
+      return myself;
+    }
+    throw assertionError(shouldHaveSameSizeAs(actual, other, actualSize, otherSize));
+  }
+
+  /**
+   * Verifies that the size of the actual RichIterable matches the size of the given array.
+   *
+   * @param other the array to compare the size of the actual RichIterable with.
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the provided array is {@code null}.
+   * @throws AssertionError if the size of the actual RichIterable does not match the size of the given array or if the given array is {@code null}.
+   */
+  @Override
+  public SELF hasSameSizeAs(Object other) {
+    isNotNull();
+
+    if (!(other != null && other.getClass().isArray())) {
+      throw assertionError(shouldBeAnArray(other));
+    }
+
+    int otherSize = Array.getLength(other);
+    int actualSize = actual.size();
+    if (actualSize == otherSize) {
+      return myself;
+    }
+
+    throw assertionError(shouldHaveSameSizeAs(actual, other, actualSize, otherSize));
   }
 
   /**
@@ -85,11 +151,11 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
    * <pre>{@code
    * // assertions will pass
    * assertThat(Sets.immutable.of("TNG", "DS9")).hasSize(2);
-   * assertThat(Bags.immutable.of(1, 2, 3)).hasSize(3);
+   * assertThat(Bags.immutable.of("TNG", "DS9", "VOY")).hasSize(3);
    *
    * // assertions will fail
    * assertThat(Sets.immutable.empty()).hasSize(1);
-   * assertThat(Bags.immutable.of(1, 2, 3)).hasSize(2);
+   * assertThat(Bags.immutable.of("TNG", "DS9", "VOY")).hasSize(2);
    * }</pre>
    *
    * @param expected the expected number of values in the actual collection.
@@ -106,6 +172,201 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
     }
 
     throw assertionError(shouldHaveSize(actual, actualSize, expected));
+  }
+
+  /**
+   * Verifies that the number of values in the actual RichIterable is between the given boundaries (inclusive).
+   * <p>
+   * Example:
+   * <pre><code class='java'> // assertions will pass
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeBetween(2, 3)
+   *                                               .hasSizeBetween(3, 4)
+   *                                               .hasSizeBetween(3, 3);
+   *
+   * // assertion will fail
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeBetween(4, 6);</code></pre>
+   *
+   * @param lowerBoundary  the lower boundary compared to which actual size should be greater than or equal to.
+   * @param higherBoundary the higher boundary compared to which actual size should be less than or equal to.
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the number of values of the actual RichIterable is not between the boundaries.
+   */
+  @Override
+  public SELF hasSizeBetween(int lowerBoundary, int higherBoundary) {
+    isNotNull();
+
+    if (!(higherBoundary >= lowerBoundary)) {
+      throw new IllegalArgumentException("The higher boundary <%s> must be greater than the lower boundary <%s>.".formatted(
+        higherBoundary,
+        lowerBoundary));
+    }
+
+    int actualSize = actual.size();
+    if (actualSize >= lowerBoundary && actualSize <= higherBoundary) {
+      return myself;
+    }
+
+    throw assertionError(shouldHaveSizeBetween(actual, actualSize, lowerBoundary, higherBoundary));
+  }
+
+  /**
+   * Verifies that the number of values in the actual RichIterable is greater than the given boundary.
+   * <p>
+   * Example:
+   * <pre>{@code // assertion will pass
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeGreaterThan(2);
+   *
+   * // assertion will fail
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeGreaterThan(3);
+   * }</pre>
+   *
+   * @param boundary the given value to compare the actual size to.
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the number of values of the actual iterable is not greater than the boundary.
+   */
+  @Override
+  public SELF hasSizeGreaterThan(int boundary) {
+    isNotNull();
+
+    int actualSize = actual.size();
+    if (actualSize > boundary) {
+      return myself;
+    }
+
+    throw assertionError(shouldHaveSizeGreaterThan(actual, actualSize, boundary));
+  }
+
+  /**
+   * Verifies that the number of values in the actual group is greater than or equal to the given boundary.
+   * <p>
+   * Example:
+   * <pre>{@code // assertions will pass
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeGreaterThanOrEqualTo(3);
+   * assertThat(Lists.immutable.of("TNG", "DS9")).hasSizeGreaterThanOrEqualTo(1);
+   *
+   * // assertions will fail
+   * assertThat(Lists.immutable.of("TNG", "DS9")).hasSizeGreaterThanOrEqualTo(3);
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeGreaterThanOrEqualTo(4);
+   * }</pre>
+   *
+   * @param boundary the given value to compare the actual size to.
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the number of values of the actual group is not greater than or equal to the boundary.
+   */
+  @Override
+  public SELF hasSizeGreaterThanOrEqualTo(int boundary) {
+    isNotNull();
+
+    int actualSize = actual.size();
+    if (actualSize >= boundary) {
+      return myself;
+    }
+
+    throw assertionError(shouldHaveSizeGreaterThanOrEqualTo(actual, actualSize, boundary));
+  }
+
+  /**
+   * Verifies that the number of values in the actual RichIterable is less than the given boundary.
+   * <p>
+   * Example:
+   * <pre>{@code
+   * // assertion will pass
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeLessThan(4);
+   *
+   * // assertion will fail
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeLessThan(3);
+   * }</pre>
+   *
+   * @param boundary the given value to compare the actual size to.
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the number of values of the actual RichIterable is not less than the boundary.
+   */
+  @Override
+  public SELF hasSizeLessThan(int boundary) {
+    isNotNull();
+
+    int actualSize = actual.size();
+    if (actualSize < boundary) {
+      return myself;
+    }
+
+    throw assertionError(shouldHaveSizeLessThan(actual, actualSize, boundary));
+  }
+
+  /**
+   * Verifies that the number of values in the actual RichIterable is less than or equal to the given boundary.
+   * <p>
+   * Example:
+   * <pre>{@code
+   * // assertions will pass
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeLessThanOrEqualTo(5)
+   *                                   .hasSizeLessThanOrEqualTo(3);
+   *
+   * // assertion will fail
+   * assertThat(Lists.immutable.of("TOS", "TNG", "DS9")).hasSizeLessThanOrEqualTo(2);
+   * }</pre>
+   *
+   * @param boundary the given value to compare the actual size to.
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the number of values of the actual RichIterable is not less than or equal to the boundary.
+   */
+  @Override
+  public SELF hasSizeLessThanOrEqualTo(int boundary) {
+    isNotNull();
+
+    int actualSize = actual.size();
+    if (actualSize <= boundary) {
+      return myself;
+    }
+
+    throw assertionError(shouldHaveSizeLessThanOrEqualTo(actual, actualSize, boundary));
+  }
+
+  /**
+   * Verifies that the actual RichIterable is empty.
+   *
+   * @throws AssertionError if the actual RichIterable is not empty.
+   */
+  @Override
+  public void isEmpty() {
+    isNotNull();
+
+    if (actual.isEmpty()) {
+      return;
+    }
+
+    throw assertionError(shouldBeEmpty(actual));
+  }
+
+  /**
+   * Verifies that the actual RichIterable is not empty.
+   *
+   * @return {@code this} assertion object.
+   * @throws AssertionError if the actual RichIterable is empty.
+   */
+  @Override
+  public SELF isNotEmpty() {
+    isNotNull();
+
+    if (actual.notEmpty()) {
+      return myself;
+    }
+
+    throw assertionError(shouldNotBeEmpty());
+  }
+
+  /**
+   * Verifies that the actual RichIterable is null or empty.
+   *
+   * @throws AssertionError if the actual RichIterable is not null or not empty.
+   */
+  @Override
+  public void isNullOrEmpty() {
+    if (actual == null || actual.isEmpty()) {
+      return;
+    }
+
+    throw assertionError(shouldBeNullOrEmpty(actual));
   }
 
   /**
