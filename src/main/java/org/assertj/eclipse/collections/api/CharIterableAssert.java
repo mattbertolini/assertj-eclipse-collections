@@ -15,14 +15,71 @@
  */
 package org.assertj.eclipse.collections.api;
 
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.error.ElementsShouldMatch.elementsShouldMatch;
+import static org.assertj.core.error.ElementsShouldSatisfy.elementsShouldSatisfy;
 import static org.assertj.core.error.ShouldContain.shouldContain;
 
+import java.util.Optional;
+
+import org.assertj.core.error.UnsatisfiedRequirement;
+import org.assertj.core.presentation.PredicateDescription;
 import org.eclipse.collections.api.CharIterable;
+import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.block.predicate.primitive.CharPredicate;
+import org.eclipse.collections.api.block.procedure.primitive.CharProcedure;
 import org.eclipse.collections.api.factory.primitive.CharLists;
+import org.eclipse.collections.api.list.primitive.CharList;
 
 public class CharIterableAssert extends AbstractPrimitiveIterableAssert<CharIterableAssert, CharIterable> {
   public CharIterableAssert(CharIterable actual) {
     super(actual, CharIterableAssert.class);
+  }
+
+  public CharIterableAssert allMatch(CharPredicate predicate) {
+    return executeAssertion(() -> assertAllMatch(predicate, PredicateDescription.GIVEN));
+  }
+
+  public CharIterableAssert allMatch(CharPredicate predicate, String predicateDescription) {
+    return executeAssertion(() -> assertAllMatch(predicate, new PredicateDescription(predicateDescription)));
+  }
+
+  private void assertAllMatch(CharPredicate predicate, PredicateDescription predicateDescription) {
+    isNotNull();
+    requireNonNull(predicate, "The predicate to evaluate should not be null");
+    isNotEmpty();
+
+    CharList nonMatches = actual.reject(predicate).toList();
+    if (nonMatches.isEmpty()) {
+      return;
+    }
+
+    throw assertionError(elementsShouldMatch(actual, nonMatches.size() == 1 ? nonMatches.getFirst() : nonMatches, predicateDescription));
+  }
+
+  public CharIterableAssert allSatisfy(CharProcedure requirements) {
+    return executeAssertion(() -> {
+      isNotNull();
+      isNotEmpty();
+      requireNonNull(requirements, "The CharProcedure expressing the assertions requirements must not be null");
+
+      RichIterable<UnsatisfiedRequirement> unsatisfiedRequirements = actual.collect(element -> failsRequirements(requirements, element))
+        .collectIf(Optional::isPresent, Optional::get);
+      if (unsatisfiedRequirements.isEmpty()) {
+        return;
+      }
+
+      throw assertionError(elementsShouldSatisfy(actual, unsatisfiedRequirements.toList(), info));
+    });
+  }
+
+  private static Optional<UnsatisfiedRequirement> failsRequirements(CharProcedure requirements, char element) {
+    try {
+      requirements.value(element);
+    } catch (AssertionError ex) {
+      return Optional.of(new UnsatisfiedRequirement(element, ex));
+    }
+    return Optional.empty();
   }
 
   public CharIterableAssert contains(char... values) {

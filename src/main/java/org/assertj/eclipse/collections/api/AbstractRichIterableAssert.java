@@ -17,9 +17,11 @@ package org.assertj.eclipse.collections.api;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.error.ElementsShouldMatch.elementsShouldMatch;
+import static org.assertj.core.error.ElementsShouldSatisfy.elementsShouldSatisfy;
 import static org.assertj.core.error.ShouldBeAnArray.shouldBeAnArray;
 import static org.assertj.core.error.ShouldBeEmpty.shouldBeEmpty;
 import static org.assertj.core.error.ShouldBeNullOrEmpty.shouldBeNullOrEmpty;
+import static org.assertj.core.error.ShouldContain.shouldContain;
 import static org.assertj.core.error.ShouldHaveSameSizeAs.shouldHaveSameSizeAs;
 import static org.assertj.core.error.ShouldHaveSize.shouldHaveSize;
 import static org.assertj.core.error.ShouldHaveSizeBetween.shouldHaveSizeBetween;
@@ -33,15 +35,22 @@ import static org.assertj.eclipse.collections.util.RichIterableUtil.sizeOf;
 
 import java.lang.reflect.Array;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.assertj.core.annotation.CheckReturnValue;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.ThrowingConsumer;
+import org.assertj.core.error.UnsatisfiedRequirement;
 import org.assertj.core.presentation.PredicateDescription;
+import org.eclipse.collections.api.PrimitiveIterable;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 
 /**
  * Base class for implementations of Eclipse Collections {@link RichIterable} assertions.
@@ -86,6 +95,57 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
     }
 
     throw assertionError(elementsShouldMatch(actual, nonMatches.size() == 1 ? nonMatches.getFirst() : nonMatches, predicateDescription));
+  }
+
+  @Override
+  public SELF allSatisfy(Consumer<? super ELEMENT> requirements) {
+    return executeAssertion(() -> assertAllSatisfy(requirements));
+  }
+
+  @Override
+  public SELF allSatisfy(ThrowingConsumer<? super ELEMENT> requirements) {
+    return allSatisfy(((Consumer<? super ELEMENT>) requirements));
+  }
+
+  private void assertAllSatisfy(Consumer<? super ELEMENT> requirements) {
+    isNotNull();
+    isNotEmpty();
+    requireNonNull(requirements, "The Consumer<T> expressing the assertions requirements must not be null");
+
+    RichIterable<UnsatisfiedRequirement> unsatisfiedRequirements = actual.collect(element -> failsRequirements(requirements, element))
+      .collectIf(Optional::isPresent, Optional::get);
+    if (unsatisfiedRequirements.isEmpty()) {
+      return;
+    }
+
+    throw assertionError(elementsShouldSatisfy(actual, unsatisfiedRequirements.toList(), info));
+  }
+
+  private static <E> Optional<UnsatisfiedRequirement> failsRequirements(Consumer<? super E> requirements, E element) {
+    try {
+      requirements.accept(element);
+    } catch (AssertionError ex) {
+      return Optional.of(new UnsatisfiedRequirement(element, ex));
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  protected void assertContains(ELEMENT[] values) {
+    isNotNull();
+    requireNonNull(values, "The array of values to look for should not be null");
+
+    if (actual.isEmpty() && values.length == 0) {
+      return;
+    }
+
+    ArrayAdapter<ELEMENT> valuesList = ArrayAdapter.adapt(values);
+    MutableList<ELEMENT> notFound = valuesList.reject(actual::contains);
+    if (notFound.isEmpty()) {
+      return;
+    }
+
+    throw assertionError(shouldContain(actual, valuesList, notFound)); // TODO: ComparisonStrategy???
   }
 
   @Override
@@ -161,6 +221,28 @@ public abstract class AbstractRichIterableAssert<SELF extends AbstractRichIterab
 
       int otherSize = Array.getLength(other);
       int actualSize = actual.size();
+      if (actualSize == otherSize) {
+        return;
+      }
+
+      throw assertionError(shouldHaveSameSizeAs(actual, other, actualSize, otherSize));
+    });
+  }
+
+  /**
+   * Verifies that the actual RichIterable matches the size of the given primitive iterable.
+   *
+   * @param other the primitive iterable to compare size with
+   * @return {@code this} assertion object
+   * @throws AssertionError if the actual RichIterable is {@code null}
+   * @throws AssertionError if the actual RichIterable does not have the same size as the given primitive iterable
+   */
+  public SELF hasSameSizeAs(PrimitiveIterable other) {
+    return executeAssertion(() -> {
+      isNotNull();
+
+      int actualSize = actual.size();
+      int otherSize = sizeOf(other);
       if (actualSize == otherSize) {
         return;
       }

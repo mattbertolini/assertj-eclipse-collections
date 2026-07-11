@@ -15,14 +15,71 @@
  */
 package org.assertj.eclipse.collections.api;
 
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.error.ElementsShouldMatch.elementsShouldMatch;
+import static org.assertj.core.error.ElementsShouldSatisfy.elementsShouldSatisfy;
 import static org.assertj.core.error.ShouldContain.shouldContain;
 
+import java.util.Optional;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoublePredicate;
+
+import org.assertj.core.error.UnsatisfiedRequirement;
+import org.assertj.core.presentation.PredicateDescription;
 import org.eclipse.collections.api.DoubleIterable;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.primitive.DoubleLists;
+import org.eclipse.collections.api.list.primitive.DoubleList;
 
 public class DoubleIterableAssert extends AbstractPrimitiveIterableAssert<DoubleIterableAssert, DoubleIterable> {
   public DoubleIterableAssert(DoubleIterable actual) {
     super(actual, DoubleIterableAssert.class);
+  }
+
+  public DoubleIterableAssert allMatch(DoublePredicate predicate) {
+    return executeAssertion(() -> assertAllMatch(predicate, PredicateDescription.GIVEN));
+  }
+
+  public DoubleIterableAssert allMatch(DoublePredicate predicate, String predicateDescription) {
+    return executeAssertion(() -> assertAllMatch(predicate, new PredicateDescription(predicateDescription)));
+  }
+
+  private void assertAllMatch(DoublePredicate predicate, PredicateDescription predicateDescription) {
+    isNotNull();
+    requireNonNull(predicate, "The predicate to evaluate should not be null");
+    isNotEmpty();
+
+    DoubleList nonMatches = actual.reject(predicate::test).toList();
+    if (nonMatches.isEmpty()) {
+      return;
+    }
+
+    throw assertionError(elementsShouldMatch(actual, nonMatches.size() == 1 ? nonMatches.getFirst() : nonMatches, predicateDescription));
+  }
+
+  public DoubleIterableAssert allSatisfy(DoubleConsumer requirements) {
+    return executeAssertion(() -> {
+      isNotNull();
+      isNotEmpty();
+      requireNonNull(requirements, "The DoubleConsumer expressing the assertions requirements must not be null");
+
+      RichIterable<UnsatisfiedRequirement> unsatisfiedRequirements = actual.collect(element -> failsRequirements(requirements, element))
+        .collectIf(Optional::isPresent, Optional::get);
+      if (unsatisfiedRequirements.isEmpty()) {
+        return;
+      }
+
+      throw assertionError(elementsShouldSatisfy(actual, unsatisfiedRequirements.toList(), info));
+    });
+  }
+
+  private static Optional<UnsatisfiedRequirement> failsRequirements(DoubleConsumer requirements, double element) {
+    try {
+      requirements.accept(element);
+    } catch (AssertionError ex) {
+      return Optional.of(new UnsatisfiedRequirement(element, ex));
+    }
+    return Optional.empty();
   }
 
   public DoubleIterableAssert contains(double... values) {
